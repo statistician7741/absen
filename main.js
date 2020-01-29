@@ -11,6 +11,9 @@ const data = xlsx.parse(file_path);
 let groups = {}
 
 let date = moment();
+const formatTanggalWithHour = 'HH:mm:ss M/D/YYYY'
+const formatHour = 'HH:mm:ss'
+const formatTglRawData = 'M/D/YYYY';
 
 data[0].data.forEach((row, i, arr) => {
     if (i > 0) {
@@ -28,11 +31,11 @@ data[0].data.forEach((row, i, arr) => {
                 // PSW4: '-',
             };
         }
-        date = moment(`${row[5]} ${row[4]}`, 'HH:mm:ss MM/D/YYYY');
+        date = moment(`${row[5]} ${row[4]}`, formatTanggalWithHour);
 
         // console.log(`${row[5]} ${row[4]}`, date)
-        const datang = moment(`${row[5]} ${row[4]}`, 'HH:mm:ss MM/D/YYYY')
-        const pulang = row[6] ? moment(`${row[8] ? row[8] : (row[7] ? row[7] : row[6])} ${row[4]}`, 'HH:mm:ss MM/D/YYYY') : undefined
+        const datang = moment(`${row[5]} ${row[4]}`, formatTanggalWithHour)
+        const pulang = row[6] ? moment(`${row[8] ? row[8] : (row[7] ? row[7] : row[6])} ${row[4]}`, formatTanggalWithHour) : undefined
         // console.log(datang.format('HH:mm:ss DD MMMM YYYY'), pulang.format('HH:mm:ss DD MMMM YYYY'));
         // console.log(datang.format('HH:mm:ss DD MMMM YYYY'), moment(datang).hour(7).minute(29).second(59).format('HH:mm:ss DD MMMM YYYY'), moment(datang).hour(7).minute(29).second(59).diff(datang, 'minutes'));
         // =1
@@ -50,11 +53,11 @@ data[0].data.forEach((row, i, arr) => {
 
         groups[row[2]].absen[row[4]] = {
             datang: {
-                pukul: terlambat_menit < 510 ?datang.format('HH:mm:ss'):'tidak absen',
+                pukul: terlambat_menit < 510 ?datang.format(formatHour):'tidak absen',
                 telat: terlambat_menit > 0 ? (terlambat_menit < 510?terlambat_menit:999) : '-'
             },
             pulang: {
-                pukul: pulang ? pulang.format('HH:mm:ss') : (terlambat_menit < 509?'tidak absen':datang.format('HH:mm:ss')),
+                pukul: pulang ? pulang.format(formatHour) : (terlambat_menit < 509?'tidak absen':datang.format(formatHour)),
                 kurang: psw_menit > 0 && terlambat_menit < 510 ? psw_menit : '-'
             },
         }
@@ -105,9 +108,9 @@ XlsxPopulate.fromFileAsync(__dirname + "/rekap.xlsx")
                                 rgb: "8c8c8c"
                             }
                         })
-                        let data = groups[nama].absen[moment(date).date(i).format('M/D/YYYY')];
+                        let data = groups[nama].absen[moment(date).date(i).format(formatTglRawData)];
                         let arr = [
-                            moment(date).date(i).format('MM/D/YYYY'),
+                            moment(date).date(i).format('DD/MM/YYYY'),
                             moment(date).date(i).format('dddd'),
                             data ? data.datang.pukul : '-',
                             data ? data.datang.telat : '-',
