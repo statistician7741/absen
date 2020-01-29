@@ -30,7 +30,7 @@ data[0].data.forEach((row, i, arr) => {
         }
         date = moment(`${row[5]} ${row[4]}`, 'HH:mm:ss MM/D/YYYY');
 
-        console.log(`${row[5]} ${row[4]}`, date)
+        // console.log(`${row[5]} ${row[4]}`, date)
         const datang = moment(`${row[5]} ${row[4]}`, 'HH:mm:ss MM/D/YYYY')
         const pulang = row[6] ? moment(`${row[8] ? row[8] : (row[7] ? row[7] : row[6])} ${row[4]}`, 'HH:mm:ss MM/D/YYYY') : undefined
         // console.log(datang.format('HH:mm:ss DD MMMM YYYY'), pulang.format('HH:mm:ss DD MMMM YYYY'));
@@ -66,10 +66,10 @@ data[0].data.forEach((row, i, arr) => {
             groups[row[2]].absen[row[4]].TL1 = 'v'
         }
         if (terlambat_menit >= 31 && terlambat_menit <= 60) {
-            groups[row[2]].absen[row[4]].TL1 = 'v'
+            groups[row[2]].absen[row[4]].TL2 = 'v'
         }
         if (terlambat_menit >= 61 && terlambat_menit <= 90) {
-            groups[row[2]].absen[row[4]].TL1 = 'v'
+            groups[row[2]].absen[row[4]].TL3 = 'v'
         }
         if (psw_menit > 90) {
             groups[row[2]].absen[row[4]].PSW4 = terlambat_menit < 510?'v':'-'
@@ -105,7 +105,7 @@ XlsxPopulate.fromFileAsync(__dirname + "/rekap.xlsx")
                                 rgb: "8c8c8c"
                             }
                         })
-                        let data = groups[nama].absen[moment(date).date(i).format('MM/D/YYYY')];
+                        let data = groups[nama].absen[moment(date).date(i).format('M/D/YYYY')];
                         let arr = [
                             moment(date).date(i).format('MM/D/YYYY'),
                             moment(date).date(i).format('dddd'),
