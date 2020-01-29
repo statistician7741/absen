@@ -4,7 +4,7 @@ const fs = require("fs");
 const moment = require('moment')
 moment.locale('id')
 const XlsxPopulate = require('xlsx-populate');
-const file_path = __dirname + "/a.xls";
+const file_path = __dirname + "/raw.xls";
 
 const data = xlsx.parse(file_path);
 
@@ -28,9 +28,11 @@ data[0].data.forEach((row, i, arr) => {
                 // PSW4: '-',
             };
         }
-        date = moment(`${row[5]} ${row[4]}`, 'HH:mm:ss M/D/YYYY');
-        const datang = moment(`${row[5]} ${row[4]}`, 'HH:mm:ss M/D/YYYY')
-        const pulang = row[6] ? moment(`${row[8] ? row[8] : (row[7] ? row[7] : row[6])} ${row[4]}`, 'HH:mm:ss M/D/YYYY') : undefined
+        date = moment(`${row[5]} ${row[4]}`, 'HH:mm:ss MM/D/YYYY');
+
+        console.log(`${row[5]} ${row[4]}`, date)
+        const datang = moment(`${row[5]} ${row[4]}`, 'HH:mm:ss MM/D/YYYY')
+        const pulang = row[6] ? moment(`${row[8] ? row[8] : (row[7] ? row[7] : row[6])} ${row[4]}`, 'HH:mm:ss MM/D/YYYY') : undefined
         // console.log(datang.format('HH:mm:ss DD MMMM YYYY'), pulang.format('HH:mm:ss DD MMMM YYYY'));
         // console.log(datang.format('HH:mm:ss DD MMMM YYYY'), moment(datang).hour(7).minute(29).second(59).format('HH:mm:ss DD MMMM YYYY'), moment(datang).hour(7).minute(29).second(59).diff(datang, 'minutes'));
         // =1
@@ -40,7 +42,7 @@ data[0].data.forEach((row, i, arr) => {
 
         if (pulang) {
             psw_menit = moment(pulang).hour(16).minute(pulang.day() === 5 ? 30 : 0).second(0).diff(pulang, 'minutes');
-            // console.log(pulang.format('HH:mm:ss DD MMMM YYYY'), psw_menit, moment(pulang).hour(16).minute(pulang.day() === 5?30:0).second(0).format('HH:mm DD/MM/YYYY'));
+            // console.log(pulang.format('HH:mm:ss DD MMMM YYYY'), psw_menit, moment(pulang).hour(16).minute(pulang.day() === 5?30:0).second(0).format('HH:mm MM/D/YYYY'));
             // (psw_menit>0)&&console.log(row);
         } else{
             psw_menit = 999;
@@ -103,9 +105,9 @@ XlsxPopulate.fromFileAsync(__dirname + "/rekap.xlsx")
                                 rgb: "8c8c8c"
                             }
                         })
-                        let data = groups[nama].absen[moment(date).date(i).format('M/D/YYYY')];
+                        let data = groups[nama].absen[moment(date).date(i).format('MM/D/YYYY')];
                         let arr = [
-                            moment(date).date(i).format('DD/MM/YYYY'),
+                            moment(date).date(i).format('MM/D/YYYY'),
                             moment(date).date(i).format('dddd'),
                             data ? data.datang.pukul : '-',
                             data ? data.datang.telat : '-',
