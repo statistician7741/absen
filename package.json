@@ -13,7 +13,7 @@
     "async": "^2.6.1",
     "lodash": "^4.17.11",
     "moment": "^2.24.0",
-    "mongoose": "^5.4.9",
+    "mongoose": "^5.7.5",
     "node-xlsx": "^0.14.1",
     "xlsx-populate": "^1.19.0"
   }
