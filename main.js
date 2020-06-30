@@ -17,36 +17,30 @@ const formatTglRawData = 'M/D/YYYY';
 
 data[0].data.forEach((row, i, arr) => {
     if (i > 0) {
-        // console.log(row);
         if (!groups[row[2]]) {
             groups[row[2]] = {
-                absen: {},
-                // TL1: '-',
-                // TL2: '-',
-                // TL3: '-',
-                // TL4: '-',
-                // PSW1: '-',
-                // PSW2: '-',
-                // PSW3: '-',
-                // PSW4: '-',
+                absen: {}
             };
         }
         date = moment(`${row[5]} ${row[4]}`, formatTanggalWithHour);
-
-        // console.log(`${row[5]} ${row[4]}`, date)
+        
         const datang = moment(`${row[5]} ${row[4]}`, formatTanggalWithHour)
         const pulang = row[6] ? moment(`${row[8] ? row[8] : (row[7] ? row[7] : row[6])} ${row[4]}`, formatTanggalWithHour) : undefined
-        // console.log(datang.format('HH:mm:ss DD MMMM YYYY'), pulang.format('HH:mm:ss DD MMMM YYYY'));
-        // console.log(datang.format('HH:mm:ss DD MMMM YYYY'), moment(datang).hour(7).minute(29).second(59).format('HH:mm:ss DD MMMM YYYY'), moment(datang).hour(7).minute(29).second(59).diff(datang, 'minutes'));
-        // =1
-        let terlambat_menit = datang.diff(moment(datang).hour(7).minute(29).second(59), 'minutes');
+        //non ramadhan
+        // let terlambat_menit = datang.diff(moment(datang).hour(7).minute(29).second(59), 'minutes');
+        //ramadhan
+        const ramadhan_start = moment("2019-05-05");
+        const ramadhan_end = moment("2019-06-03");
+        const isRamadhan = !(datang.isBefore(ramadhan_start) || datang.isAfter(ramadhan_end));
+        let terlambat_menit = datang.diff(moment(datang).hour(7).minute(isRamadhan?59:29).second(59), 'minutes');
 
         let psw_menit = 0;
 
         if (pulang) {
-            psw_menit = moment(pulang).hour(16).minute(pulang.day() === 5 ? 30 : 0).second(0).diff(pulang, 'minutes');
-            // console.log(pulang.format('HH:mm:ss DD MMMM YYYY'), psw_menit, moment(pulang).hour(16).minute(pulang.day() === 5?30:0).second(0).format('HH:mm MM/D/YYYY'));
-            // (psw_menit>0)&&console.log(row);
+            //non ramadhan
+            // psw_menit = moment(pulang).hour(16).minute(pulang.day() === 5 ? 30 : 0).second(0).diff(pulang, 'minutes');
+            //ramadhan
+            psw_menit = moment(pulang).hour(isRamadhan?15:16).minute(pulang.day() === 5 ? 30 : 0).second(0).diff(pulang, 'minutes');
         } else{
             psw_menit = 999;
         }
