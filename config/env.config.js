@@ -1,6 +1,7 @@
 module.exports = {
     shift_ppnpn:{
         'ISHAK': [
+            //[siang, malam, satpam/cleaning service]
             [0,1,'tipe1'], //minggu
             [1,0,'tipe1'], //senin
             [1,0,'tipe1'], //selasa

@@ -18,6 +18,9 @@ const formatTanggalWithHour = 'HH:mm:ss M/D/YYYY'
 const formatHour = 'HH:mm:ss'
 const formatTglRawData = 'M/D/YYYY';
 
+const terlambat_menitF = (absen_time, jam_batas) => (absen_time.diff(jam_batas, 'minutes') > 0 ? absen_time.diff(jam_batas, 'minutes') : '-');
+const psw_menitF = (absen_time, jam_batas) => (jam_batas.diff(absen_time, 'minutes') > 0 ? jam_batas.diff(absen_time, 'minutes') : '-');
+
 let ppnpns = {}
 data[0].data.forEach((row, i, arr) => {
     if (i > 0) {
@@ -26,83 +29,103 @@ data[0].data.forEach((row, i, arr) => {
                 absen: {}
             };
         }
-        current_day = moment(`${row[5]} ${row[4]}`, formatTanggalWithHour);
+
+        if (!ppnpns[row[2]]) ppnpns[row[2]] = {} //nama
+        if (!ppnpns[row[2]]['absen']) ppnpns[row[2]]['absen'] = {} //absen obj
+        if (!ppnpns[row[2]]['absen'][row[4]]) ppnpns[row[2]]['absen'][row[4]] = {} //tanggal
+        if (!ppnpns[row[2]]['absen'][row[4]].datang) ppnpns[row[2]]['absen'][row[4]].datang = {
+            pukul: undefined,
+            telat: undefined
+        }
+        if (!ppnpns[row[2]]['absen'][row[4]].mid) ppnpns[row[2]]['absen'][row[4]].mid = {
+            pukul: undefined
+        }
+        if (!ppnpns[row[2]]['absen'][row[4]].pulang) ppnpns[row[2]]['absen'][row[4]].pulang = {
+            pukul: undefined,
+            telat: undefined
+        }
+        if (!ppnpns[row[2]]['absen'][row[4]].all_absen) ppnpns[row[2]]['absen'][row[4]].all_absen = []
+        current_day = moment(row[4], formatTglRawData);
+        yesterday = moment(row[4], formatTglRawData).subtract(1, 'day');
+        besok = moment(row[4], formatTglRawData).add(1, 'day');
+        const all_absen_yest = ppnpns[row[2]]['absen'][yesterday.format(formatTglRawData)] ? ppnpns[row[2]]['absen'][yesterday.format(formatTglRawData)].all_absen : []
         for (let index = 5; index <= 8; index++) {
             if (row[index]) {
-                if (!ppnpns[row[2]]) ppnpns[row[2]] = {}
-                if (!ppnpns[row[2]][row[4]]) ppnpns[row[2]][row[4]] = {}
-                if (!ppnpns[row[2]][row[4]].presensiArray) ppnpns[row[2]][row[4]].presensiArray = []
-                ppnpns[row[2]][row[4]].presensiArray.push(moment(`${row[index]} ${row[4]}`, formatTanggalWithHour))
+                const absen_time = moment(`${row[index]} ${row[4]}`, formatTanggalWithHour)
+                ppnpns[row[2]]['absen'][row[4]].all_absen.push(absen_time)
+                const pukul0130 = moment(current_day).hour(1).minute(29).second(59)
+                const pukul0730 = moment(current_day).hour(7).minute(29).second(59)
+                const pukul1130 = moment(current_day).hour(11).minute(29).second(59)
+                const pukul1330 = moment(current_day).hour(13).minute(29).second(59)
+                const pukul1600 = moment(current_day).hour(15).minute(59).second(59)
+                const pukul1630 = moment(current_day).hour(16).minute(29).second(59)
+                const pukul1930 = moment(current_day).hour(19).minute(29).second(59)
+                const pukul2330 = moment(current_day).hour(23).minute(29).second(59)
+                const pukul2359 = moment(current_day).hour(23).minute(59).second(59)
+                const pukul2330kemarin = moment(current_day).subtract(1, 'day').hour(23).minute(29).second(59)
+                const tipe_pnpns = shift_ppnpn[row[2]][current_day.day()][2] // tipe1 atau tipe2
+                if (shift_ppnpn[row[2]][current_day.day()][0]) { //SHIFT SIANG
+                    if (absen_time.isBetween(pukul0130, pukul1130) && !ppnpns[row[2]]['absen'][row[4]].datang.pukul) { //jika antara 01.30 - 11.30 dianggap absen datang
+                        ppnpns[row[2]]['absen'][row[4]].datang = {
+                            pukul: absen_time,
+                            telat: terlambat_menitF(absen_time, pukul0730)
+                        }
+                    } else if (absen_time.isBetween(pukul1130, pukul1330)) { //jika antara 11.30 - 13.30 dianggap absen mid
+                        ppnpns[row[2]]['absen'][row[4]].mid = {
+                            pukul: absen_time
+                        }
+                    } else if (absen_time.isBetween(pukul1130, pukul2330)) { //jika antara 11.30 - 23.30 dianggap absen pulang
+                        ppnpns[row[2]]['absen'][row[4]].pulang = {
+                            pukul: absen_time,
+                            kurang: psw_menitF(absen_time, tipe_pnpns === 'tipe2' ? (absen_time.day() === 5 ? pukul1630 : pukul1600) : pukul1930)
+                        }
+                    }
+                } else if (shift_ppnpn[row[2]][current_day.day()][1]) {
+                    if (absen_time.isBetween(pukul1600, pukul2330)) { //jika antara 16.00 - 23.30 dianggap absen datang
+                        if (!ppnpns[row[2]]){
+                            ppnpns[row[2]] = {}
+                            if (!ppnpns[row[2]]['absen']){
+                                ppnpns[row[2]]['absen'] = {}
+                                if (!ppnpns[row[2]]['absen'][besok.format(formatTglRawData)].datang){
+
+                                }
+                            }
+                        }
+                        if (!ppnpns[row[2]]) ppnpns[row[2]] = {} //nama
+                        if (!ppnpns[row[2]]['absen']) ppnpns[row[2]]['absen'] = {} //absen obj
+                        if (!ppnpns[row[2]]['absen'][besok.format(formatTglRawData)]) ppnpns[row[2]]['absen'][besok.format(formatTglRawData)] = {} //tanggal
+                        if (!ppnpns[row[2]]['absen'][besok.format(formatTglRawData)].datang) ppnpns[row[2]]['absen'][besok.format(formatTglRawData)].datang = {
+                            pukul: absen_time,
+                            telat: terlambat_menitF(absen_time, pukul1930)
+                        }
+                        ppnpns[row[2]]['absen'][row[4]].datang = {
+                            pukul: absen_time,
+                            telat: terlambat_menitF(absen_time, pukul1930)
+                        }
+                    } 
+                    // else if (absen_time.isBetween(pukul2330, pukul2359)) { //jika antara 11.30 - 13.30 dianggap absen mid
+                    //     ppnpns[row[2]]['absen'][row[4]].mid = {
+                    //         pukul: absen_time
+                    //     }
+                    // } else if (absen_time.isBetween(pukul1130, pukul2330)) { //jika antara 11.30 - 23.30 dianggap absen pulang
+                    //     ppnpns[row[2]]['absen'][row[4]].pulang = {
+                    //         pukul: absen_time,
+                    //         kurang: psw_menitF(absen_time, tipe_pnpns === 'tipe2' ? (absen_time.day() === 5 ? pukul1630 : pukul1600) : pukul1930)
+                    //     }
+                    // }
+                }
+
             }
-        }
-
-        const datang = moment(`${row[5]} ${row[4]}`, formatTanggalWithHour)
-        const mid = moment(`${row[5]} ${row[4]}`, formatTanggalWithHour)
-        const pulang = row[6] ? moment(`${row[8] ? row[8] : (row[7] ? row[7] : row[6])} ${row[4]}`, formatTanggalWithHour) : undefined
-        //non ramadhan
-        // let terlambat_menit = datang.diff(moment(datang).hour(7).minute(29).second(59), 'minutes');
-        //ramadhan
-        const ramadhan_start = moment("2019-05-05");
-        const ramadhan_end = moment("2019-06-03");
-        const isRamadhan = !(datang.isBefore(ramadhan_start) || datang.isAfter(ramadhan_end));
-        let terlambat_menit = datang.diff(moment(datang).hour(7).minute(isRamadhan ? 59 : 29).second(59), 'minutes');
-
-        let psw_menit = 0;
-
-        if (pulang) {
-            //non ramadhan
-            // psw_menit = moment(pulang).hour(16).minute(pulang.day() === 5 ? 30 : 0).second(0).diff(pulang, 'minutes');
-            //ramadhan
-            psw_menit = moment(pulang).hour(isRamadhan ? 15 : 16).minute(pulang.day() === 5 ? 30 : 0).second(0).diff(pulang, 'minutes');
-        } else {
-            psw_menit = 999;
-        }
-
-        groups[row[2]].absen[row[4]] = {
-            datang: {
-                pukul: terlambat_menit < 510 ? datang.format(formatHour) : 'tidak absen',
-                telat: terlambat_menit > 0 ? (terlambat_menit < 510 ? terlambat_menit : 999) : '-'
-            },
-            pulang: {
-                pukul: pulang ? pulang.format(formatHour) : (terlambat_menit < 509 ? 'tidak absen' : datang.format(formatHour)),
-                kurang: psw_menit > 0 && terlambat_menit < 510 ? psw_menit : '-'
-            },
-        }
-
-        if (terlambat_menit > 90) {
-            groups[row[2]].absen[row[4]].TL4 = 'v'
-        }
-        if (terlambat_menit >= 1 && terlambat_menit <= 30) {
-            groups[row[2]].absen[row[4]].TL1 = 'v'
-        }
-        if (terlambat_menit >= 31 && terlambat_menit <= 60) {
-            groups[row[2]].absen[row[4]].TL2 = 'v'
-        }
-        if (terlambat_menit >= 61 && terlambat_menit <= 90) {
-            groups[row[2]].absen[row[4]].TL3 = 'v'
-        }
-        if (psw_menit > 90) {
-            groups[row[2]].absen[row[4]].PSW4 = terlambat_menit < 510 ? 'v' : '-'
-        }
-        if (psw_menit >= 1 && psw_menit <= 30) {
-            groups[row[2]].absen[row[4]].PSW1 = 'v'
-        }
-        if (psw_menit >= 31 && psw_menit <= 60) {
-            groups[row[2]].absen[row[4]].PSW2 = 'v'
-        }
-        if (psw_menit >= 61 && psw_menit <= 90) {
-            groups[row[2]].absen[row[4]].PSW3 = 'v'
         }
     }
 })
 
-console.log(ppnpns);
 
 XlsxPopulate.fromFileAsync(__dirname + "/rekap_ppnpns.xlsx")
     .then(workbook => {
         let index = 0;
-        for (let nama in groups) {
-            if (groups.hasOwnProperty(nama)) {
+        for (let nama in ppnpns) {
+            if (ppnpns.hasOwnProperty(nama)) {
                 if (true) {
                     let sheet = workbook.sheet(index);
                     sheet.name(nama)
@@ -110,21 +133,22 @@ XlsxPopulate.fromFileAsync(__dirname + "/rekap_ppnpns.xlsx")
                     workbook.sheet(index).cell("B2").value(nama);
                     let row = 7
                     for (let i = 1; i <= current_day.endOf('month').date(); i++) {
-                        let r = sheet.range('A' + row + ':N' + row);
+                        let r = sheet.range('A' + row + ':O' + row);
                         (moment(current_day).date(i).day() === 0 || moment(current_day).date(i).day() === 6) && r.style("fill", {
                             type: "solid",
                             color: {
                                 rgb: "8c8c8c"
                             }
                         })
-                        let data = groups[nama].absen[moment(current_day).date(i).format(formatTglRawData)];
+                        let data = ppnpns[nama].absen[moment(current_day).date(i).format(formatTglRawData)];
                         let arr = [
                             moment(current_day).date(i).format('DD/MM/YYYY'),
                             moment(current_day).date(i).format('dddd'),
-                            data ? data.datang.pukul : '-',
-                            data ? data.datang.telat : '-',
-                            data ? data.pulang.pukul : '-',
-                            data ? data.pulang.kurang : '-',
+                            data ? (data.datang.pukul ? data.datang.pukul.format(formatHour) : '-') : '-',
+                            data ? (data.datang.telat ? data.datang.telat : '-') : '-',
+                            '-',//data ? (data.mid.pukul ? data.mid.pukul.format(formatHour) : '-') : '-',
+                            data ? (data.pulang.pukul ? data.pulang.pukul.format(formatHour) : '-') : '-',
+                            data ? (data.pulang.kurang ? data.pulang.kurang : '-') : '-',
 
                             data ? (data.TL1 ? data.TL1 : '-') : '-',
                             data ? (data.TL2 ? data.TL2 : '-') : '-',
@@ -146,133 +170,10 @@ XlsxPopulate.fromFileAsync(__dirname + "/rekap_ppnpns.xlsx")
             }
         }
 
-        if (fs.existsSync(__dirname + `/rekap_ok.xlsx`)) {
-            fs.unlinkSync(__dirname + `/rekap_ok.xlsx`);
+        if (fs.existsSync(__dirname + `/rekap_ok_PPNPNS.xlsx`)) {
+            fs.unlinkSync(__dirname + `/rekap_ok_PPNPNS.xlsx`);
         }
-        workbook.toFileAsync(__dirname + `/rekap_ok.xlsx`);
+        workbook.toFileAsync(__dirname + `/rekap_ok_PPNPNS.xlsx`);
     }).then(dataa => {
         console.log('Finished');
     })
-
-const getPresensi = (presensiArray, current_day) => {
-    const isBefore1130 = presensiArray[0] ? moment(presensiArray[0], 'YYYY/MM/DD HH:mm:ss').isBefore(moment(current_day).hour(11).minute(29).second(59)) : undefined;
-    if (presensiArray.length > 1) {
-        const isAfter1330 = moment(presensiArray[presensiArray.length - 1], 'YYYY/MM/DD HH:mm:ss').isAfter(moment(current_day).hour(13).minute(29).second(59));
-        return {
-            datang: isBefore1130 ? moment(presensiArray[0], 'YYYY/MM/DD HH:mm:ss') : undefined,
-            mid: (() => {
-                let _mid = undefined;
-                presensiArray.forEach(t => {
-                    if (moment(t, 'YYYY/MM/DD HH:mm:ss').isAfter(moment(current_day).hour(11).minute(29).second(59)) && moment(t, 'YYYY/MM/DD HH:mm:ss').isBefore(moment(current_day).hour(13).minute(29).second(59))) {
-                        _mid = t
-                    }
-                })
-                return _mid ? moment(_mid, 'YYYY/MM/DD HH:mm:ss') : _mid
-            })(),
-            pulang: isAfter1330 ? moment(presensiArray[presensiArray.length - 1], 'YYYY/MM/DD HH:mm:ss') : undefined,
-        }
-    } else {
-        if (presensiArray[0]) {
-            const isAfter1330 = moment(presensiArray[0], 'YYYY/MM/DD HH:mm:ss').isAfter(moment(current_day).hour(13).minute(29).second(59));
-            return {
-                datang: isBefore1130 ? moment(presensiArray[0], 'YYYY/MM/DD HH:mm:ss') : undefined,
-                mid: !isBefore1130 && !isAfter1330 ? moment(presensiArray[0], 'YYYY/MM/DD HH:mm:ss') : undefined,
-                pulang: isAfter1330 ? moment(presensiArray[0], 'YYYY/MM/DD HH:mm:ss') : undefined
-            }
-        } else {
-            return {
-                datang: undefined,
-                mid: undefined,
-                pulang: undefined
-            }
-        }
-    }
-}
-
-const getPresensiShift = (presensi, current_day, name) => {
-    if (!this.isShiftMalam(name)) return this.getPresensi(this.getAllDayHandkey(presensi).today, current_day)
-    const isUp1800 = current_day.isAfter(moment(current_day).hour(17).minute(59).second(59))
-    if (isUp1800) {
-        return {
-            datang: (() => {
-                let _datang = undefined;
-                this.getAllDayHandkey(presensi).today.forEach(t => {
-                    if (moment(t, 'YYYY/MM/DD HH:mm:ss').isBetween(
-                        moment(current_day).hour(17).minute(59).second(59),
-                        moment(current_day).hour(23).minute(29).second(59)
-                    )) {
-                        if (!_datang) _datang = t
-                    }
-                })
-                return _datang ? moment(_datang, 'YYYY/MM/DD HH:mm:ss') : _datang
-            })(),
-            mid: (() => {
-                let _mid = undefined;
-                this.getAllDayHandkey(presensi).today.forEach(t => {
-                    if (moment(t, 'YYYY/MM/DD HH:mm:ss').isBetween(
-                        moment(current_day).hour(23).minute(29).second(59),
-                        moment(current_day).hour(23).minute(59).second(59)
-                    )) {
-                        _mid = t
-                    }
-                })
-                return _mid ? moment(_mid, 'YYYY/MM/DD HH:mm:ss') : _mid
-            })(),
-            pulang: undefined
-        }
-    } else {
-        return {
-            datang: (() => {
-                let _datang = undefined;
-                this.getAllDayHandkey(presensi).yest.forEach(t => {
-                    if (moment(t, 'YYYY/MM/DD HH:mm:ss').isBetween(
-                        moment(current_day).subtract(1, 'day').hour(17).minute(59).second(59),
-                        moment(current_day).subtract(1, 'day').hour(23).minute(29).second(59)
-                    )) {
-                        _datang = t
-                    }
-                })
-                return _datang ? moment(_datang, 'YYYY/MM/DD HH:mm:ss') : _datang
-            })(),
-            mid: (() => {
-                let _mid = undefined;
-                this.getAllDayHandkey(presensi).yest.forEach(t => {
-                    if (moment(t, 'YYYY/MM/DD HH:mm:ss').isBetween(
-                        moment(current_day).subtract(1, 'day').hour(23).minute(29).second(59),
-                        moment(current_day).hour(1).minute(30).second(0)
-                    )) {
-                        _mid = t
-                    }
-                })
-                this.getAllDayHandkey(presensi).today.forEach(t => {
-                    if (moment(t, 'YYYY/MM/DD HH:mm:ss').isBetween(
-                        moment(current_day).subtract(1, 'day').hour(23).minute(29).second(59),
-                        moment(current_day).hour(1).minute(30).second(0)
-                    )) {
-                        _mid = t
-                    }
-                })
-                return _mid ? moment(_mid, 'YYYY/MM/DD HH:mm:ss') : _mid
-            })(),
-            pulang: (() => {
-                let _pulang = undefined;
-                this.getAllDayHandkey(presensi).today.forEach(t => {
-                    if (moment(t, 'YYYY/MM/DD HH:mm:ss').isBetween(
-                        moment(current_day).hour(7).minute(29).second(59),
-                        moment(current_day).hour(11).minute(30).second(0)
-                    )) {
-                        _pulang = t
-                    }
-                })
-                return _pulang ? moment(_pulang, 'YYYY/MM/DD HH:mm:ss') : _pulang
-            })()
-        }
-    }
-}
-
-const getAllDayHandkey = (presensi) => {
-    return {
-        today: presensi[0]._id === today_id ? presensi[0].handkey_time : presensi[1].handkey_time, // 'YYYY/MM/DD HH:mm:ss'
-        yest: presensi[0]._id === yest_id ? presensi[0].handkey_time : presensi[1].handkey_time // 'YYYY/MM/DD HH:mm:ss'
-    }
-}
