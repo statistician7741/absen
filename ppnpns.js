@@ -49,7 +49,7 @@ data[0].data.forEach((row, i, arr) => {
         const active_ppnpns_absen = ppnpns[row[2]]['absen']
         const active_absen_today = ppnpns[row[2]]['absen'][row[4]]
         current_day = moment(row[4], formatTglRawData);
-        if( i===1 ) targetDay = moment(row[4], formatTglRawData);
+        if (i === 1) targetDay = moment(row[4], formatTglRawData);
         yesterday = moment(row[4], formatTglRawData).subtract(1, 'day');
         besok = moment(row[4], formatTglRawData).add(1, 'day');
         const all_absen_yest = ppnpns[row[2]]['absen'][yesterday.format(formatTglRawData)] ? ppnpns[row[2]]['absen'][yesterday.format(formatTglRawData)].all_absen : []
@@ -59,7 +59,7 @@ data[0].data.forEach((row, i, arr) => {
                 active_absen_today.all_absen.push(absen_time)
                 const pukul0000 = moment(current_day).hour(0).minute(0).second(0)
                 const pukul0130 = moment(current_day).hour(1).minute(29).second(59)
-                const pukul0600 = moment(current_day).hour(5).minute(59).second(59)
+                const pukul0500 = moment(current_day).hour(4).minute(59).second(59)
                 const pukul0730 = moment(current_day).hour(7).minute(29).second(59)
                 const pukul1130 = moment(current_day).hour(11).minute(29).second(59)
                 const pukul1330 = moment(current_day).hour(13).minute(29).second(59)
@@ -71,7 +71,7 @@ data[0].data.forEach((row, i, arr) => {
                 const pukul2330kemarin = moment(current_day).subtract(1, 'day').hour(23).minute(29).second(59)
                 const tipe_pnpns = shift_ppnpn[row[2]][current_day.day()][2] // tipe1 atau tipe2
                 if (shift_ppnpn[row[2]][current_day.day()][0]) { //SHIFT SIANG
-                    if (absen_time.isBetween(pukul0600, pukul1130) && !active_absen_today.datang.pukul) { //jika antara 06.00 - 11.30 dianggap absen datang
+                    if (absen_time.isBetween(pukul0500, pukul1130) && !active_absen_today.datang.pukul) { //jika antara 06.00 - 11.30 dianggap absen datang
                         active_absen_today.datang = {
                             pukul: absen_time,
                             telat: terlambat_menitF(absen_time, pukul0730)
@@ -170,7 +170,7 @@ XlsxPopulate.fromFileAsync(__dirname + "/rekap_ppnpns.xlsx")
                     workbook.sheet(index).cell("B2").value(nama);
                     let row = 7
                     for (let i = 1; i <= targetDay.endOf('month').date(); i++) {
-                        let r = sheet.range('A' + row + ':G' + row);
+                        let r = sheet.range('A' + row + ':N' + row);
                         (moment(targetDay).date(i).day() === 0 || moment(targetDay).date(i).day() === 6) && r.style("fill", {
                             type: "solid",
                             color: {
@@ -178,25 +178,47 @@ XlsxPopulate.fromFileAsync(__dirname + "/rekap_ppnpns.xlsx")
                             }
                         })
                         let data = ppnpns[nama].absen[moment(targetDay).date(i).format(formatTglRawData)];
-                        let arr = [
-                            moment(targetDay).date(i).format('DD/MM/YYYY'),
-                            moment(targetDay).date(i).format('dddd'),
-                            data ? (data.datang.pukul ? data.datang.pukul.format(formatHour) : '-') : '-',
-                            data ? (data.datang.telat ? data.datang.telat : '-') : '-',
-                            data ? (data.mid.pukul ? data.mid.pukul.format(formatHour) : '-') : '-',
-                            data ? (data.pulang.pukul ? data.pulang.pukul.format(formatHour) : '-') : '-',
-                            data ? (data.pulang.kurang ? data.pulang.kurang : '-') : '-',
+                        let arr;
+                        if (data) {
+                            let { datang: { pukul: d_pukul, telat: d_telat }, mid: { pukul: m_pukul }, pulang: { pukul: p_pukul, kurang: p_kurang } } = data
+                            arr = [
+                                moment(targetDay).date(i).format('DD/MM/YYYY'),
+                                moment(targetDay).date(i).format('dddd'),
+                                d_pukul ? d_pukul.format(formatHour) : '-',
+                                d_telat ? d_telat : '-',
+                                m_pukul ? m_pukul.format(formatHour) : '-',
+                                p_pukul ? p_pukul.format(formatHour) : '-',
+                                p_kurang ? p_kurang : '-',
 
-                            // data ? (data.TL1 ? data.TL1 : '-') : '-',
-                            // data ? (data.TL2 ? data.TL2 : '-') : '-',
-                            // data ? (data.TL3 ? data.TL3 : '-') : '-',
-                            // data ? (data.TL4 ? data.TL4 : '-') : '-',
+                                d_telat ? (d_telat < 61 ? 1 : '-') : '-',
+                                d_telat ? (d_telat > 60 && d_telat < 91 ? 1 : '-') : '-',
+                                d_telat ? (d_telat > 90 && d_telat < 999 ? 1 : (!d_pukul && !p_pukul? '-' : (d_telat > 90?1:'-') )) : '-',
 
-                            // data ? (data.PSW1 ? data.PSW1 : '-') : '-',
-                            // data ? (data.PSW2 ? data.PSW2 : '-') : '-',
-                            // data ? (data.PSW3 ? data.PSW3 : '-') : '-',
-                            // data ? (data.PSW4 ? data.PSW4 : '-') : '-',
-                        ]
+                                p_kurang ? (p_kurang < 61 ? 1 : '-') : '-',
+                                p_kurang ? (p_kurang > 60 && p_kurang < 91 ? 1 : '-') : '-',
+                                p_kurang ? (p_kurang > 90 && p_kurang < 999 ? 1 : (!d_pukul && !p_pukul? '-' : (p_kurang > 90?1:'-') )) : '-',
+                                !d_pukul && !p_pukul ? 1 : '-',
+                            ]
+                        } else {
+                            arr = [
+                                moment(targetDay).date(i).format('DD/MM/YYYY'),
+                                moment(targetDay).date(i).format('dddd'),
+                                '-',
+                                '-',
+                                '-',
+                                '-',
+                                '-',
+
+                                '-',
+                                '-',
+                                '-',
+
+                                '-',
+                                '-',
+                                '-',
+                                '-',
+                            ]
+                        }
                         r.value([
                             arr
                         ]);
