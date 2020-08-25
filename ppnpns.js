@@ -166,43 +166,45 @@ XlsxPopulate.fromFileAsync(__dirname + "/rekap_ppnpns.xlsx")
                 if (true) {
                     let sheet = workbook.sheet(index);
                     sheet.name(nama)
-                    workbook.sheet(index).cell("B1").value(targetDay.format('MMMM YYYY'));
+                    workbook.sheet(index).cell("B1").value(current_day.format('MMMM YYYY'));
                     workbook.sheet(index).cell("B2").value(nama);
                     let row = 7
-                    for (let i = 1; i <= targetDay.endOf('month').date(); i++) {
-                        let r = sheet.range('A' + row + ':N' + row);
-                        (moment(targetDay).date(i).day() === 0 || moment(targetDay).date(i).day() === 6) && r.style("fill", {
+                    for (let i = 1; i <= current_day.endOf('month').date(); i++) {
+                        let r = sheet.range('A' + row + ':P' + row);
+                        (moment(current_day).date(i).day() === 0 || moment(current_day).date(i).day() === 6) && r.style("fill", {
                             type: "solid",
                             color: {
                                 rgb: "8c8c8c"
                             }
                         })
-                        let data = ppnpns[nama].absen[moment(targetDay).date(i).format(formatTglRawData)];
+                        let data = ppnpns[nama].absen[moment(current_day).date(i).format(formatTglRawData)];
                         let arr;
                         if (data) {
                             let { datang: { pukul: d_pukul, telat: d_telat }, mid: { pukul: m_pukul }, pulang: { pukul: p_pukul, kurang: p_kurang } } = data
                             arr = [
-                                moment(targetDay).date(i).format('DD/MM/YYYY'),
-                                moment(targetDay).date(i).format('dddd'),
+                                moment(current_day).date(i).format('DD/MM/YYYY'),
+                                moment(current_day).date(i).format('dddd'),
                                 d_pukul ? d_pukul.format(formatHour) : '-',
                                 d_telat ? d_telat : '-',
                                 m_pukul ? m_pukul.format(formatHour) : '-',
                                 p_pukul ? p_pukul.format(formatHour) : '-',
                                 p_kurang ? p_kurang : '-',
 
-                                d_telat ? (d_telat < 61 ? 1 : '-') : '-',
+                                d_telat ? (d_telat < 31 ? 1 : '-') : '-',
+                                d_telat ? (d_telat > 30 && d_telat < 61 ? 1 : '-') : '-',
                                 d_telat ? (d_telat > 60 && d_telat < 91 ? 1 : '-') : '-',
-                                d_telat ? (d_telat > 90 && d_telat < 999 ? 1 : (!d_pukul && !p_pukul? '-' : (d_telat > 90?1:'-') )) : '-',
+                                d_telat ? (d_telat > 90 || !d_pukul ? ( d_pukul || p_pukul ? 1 : '-' ) : '-' ) : '-',
 
-                                p_kurang ? (p_kurang < 61 ? 1 : '-') : '-',
+                                p_kurang ? (p_kurang < 31 ? 1 : '-') : '-',
+                                p_kurang ? (p_kurang > 30 && p_kurang < 61 ? 1 : '-') : '-',
                                 p_kurang ? (p_kurang > 60 && p_kurang < 91 ? 1 : '-') : '-',
-                                p_kurang ? (p_kurang > 90 && p_kurang < 999 ? 1 : (!d_pukul && !p_pukul? '-' : (p_kurang > 90?1:'-') )) : '-',
+                                p_kurang ? (p_kurang > 90 || !p_pukul ? ( d_pukul || p_pukul ? 1 : '-' ) : '-') : '-',
                                 !d_pukul && !p_pukul ? 1 : '-',
                             ]
                         } else {
                             arr = [
-                                moment(targetDay).date(i).format('DD/MM/YYYY'),
-                                moment(targetDay).date(i).format('dddd'),
+                                moment(current_day).date(i).format('DD/MM/YYYY'),
+                                moment(current_day).date(i).format('dddd'),
                                 '-',
                                 '-',
                                 '-',
@@ -212,7 +214,9 @@ XlsxPopulate.fromFileAsync(__dirname + "/rekap_ppnpns.xlsx")
                                 '-',
                                 '-',
                                 '-',
+                                '-',
 
+                                '-',
                                 '-',
                                 '-',
                                 '-',
