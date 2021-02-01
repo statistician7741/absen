@@ -4,7 +4,7 @@ const fs = require("fs");
 const moment = require('moment')
 moment.locale('id')
 const XlsxPopulate = require('xlsx-populate');
-const file_path = __dirname + "/raw new.xls";
+const file_path = __dirname + "/Daily Log(20210201_2145).xls";
 const shift_ppnpn = require('./config/env.config').shift_ppnpn
 
 const data = xlsx.parse(file_path);
@@ -12,7 +12,7 @@ const data = xlsx.parse(file_path);
 let groups = {}
 
 let current_day = moment();
-let targetDay = moment();
+let targetDay = moment().month(0);
 const today_id = moment().format('YYYY_MM_DD')
 const yest_id = moment().subtract(1, 'day').format('YYYY_MM_DD')
 const formatTanggalWithHour = 'HH:mm:ss M/D/YYYY'
@@ -24,8 +24,8 @@ const psw_menitF = (absen_time, jam_batas) => (jam_batas.diff(absen_time, 'minut
 
 let ppnpns = {}
 data[0].data.forEach((row, i, arr) => {
-    if (i > 0) {
-        if (!groups[row[2]]) {
+    if (i > 0 && ["IRFAN", "ISHAK", 'Mariani', 'ARDAN'].includes(row[2])) {
+        if (!groups[row[2]] ) {
             groups[row[2]] = {
                 absen: {}
             };
@@ -158,7 +158,7 @@ data[0].data.forEach((row, i, arr) => {
 })
 
 //lintas bulan
-// current_day = targetDay
+current_day = targetDay
 
 
 XlsxPopulate.fromFileAsync(__dirname + "/rekap_ppnpns.xlsx")
@@ -173,7 +173,7 @@ XlsxPopulate.fromFileAsync(__dirname + "/rekap_ppnpns.xlsx")
                     workbook.sheet(index).cell("B2").value(nama);
                     let row = 7
                     for (let i = 1; i <= current_day.endOf('month').date(); i++) {
-                        let r = sheet.range('A' + row + ':P' + row);
+                        let r = sheet.range('A' + row + ':Q' + row);
                         (moment(current_day).date(i).day() === 0 || moment(current_day).date(i).day() === 6) && r.style("fill", {
                             type: "solid",
                             color: {
@@ -203,6 +203,7 @@ XlsxPopulate.fromFileAsync(__dirname + "/rekap_ppnpns.xlsx")
                                 p_kurang ? (p_kurang > 60 && p_kurang < 91 ? 1 : '-') : '-',
                                 p_kurang ? (p_kurang > 90 || !p_pukul ? ( d_pukul || p_pukul ? 1 : '-' ) : '-') : '-',
                                 !d_pukul && !p_pukul ? 1 : '-',
+                                m_pukul ? '-' : (moment(current_day).date(i).isAfter(moment(current_day).date(10).endOf('day'))?1:'-'),
                             ]
                         } else {
                             arr = [
