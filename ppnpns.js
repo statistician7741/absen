@@ -4,7 +4,7 @@ const fs = require("fs");
 const moment = require('moment')
 moment.locale('id')
 const XlsxPopulate = require('xlsx-populate');
-const file_path = __dirname + "/Daily Log(20210201_2145).xls";
+const file_path = __dirname + "/Daily Log(20210223_0849).xls";
 const shift_ppnpn = require('./config/env.config').shift_ppnpn
 
 const data = xlsx.parse(file_path);
@@ -158,7 +158,7 @@ data[0].data.forEach((row, i, arr) => {
 })
 
 //lintas bulan
-current_day = targetDay
+// current_day = targetDay
 
 
 XlsxPopulate.fromFileAsync(__dirname + "/rekap_ppnpns.xlsx")
@@ -203,7 +203,7 @@ XlsxPopulate.fromFileAsync(__dirname + "/rekap_ppnpns.xlsx")
                                 p_kurang ? (p_kurang > 60 && p_kurang < 91 ? 1 : '-') : '-',
                                 p_kurang ? (p_kurang > 90 || !p_pukul ? ( d_pukul || p_pukul ? 1 : '-' ) : '-') : '-',
                                 !d_pukul && !p_pukul ? 1 : '-',
-                                m_pukul ? '-' : (moment(current_day).date(i).isAfter(moment(current_day).date(10).endOf('day'))?1:'-'),
+                                m_pukul ? '-' : 1,//(moment(current_day).date(i).isAfter(moment(current_day).date(10).endOf('day'))?1:'-'),
                             ]
                         } else {
                             arr = [
@@ -220,6 +220,7 @@ XlsxPopulate.fromFileAsync(__dirname + "/rekap_ppnpns.xlsx")
                                 '-',
                                 '-',
 
+                                '-',
                                 '-',
                                 '-',
                                 '-',
