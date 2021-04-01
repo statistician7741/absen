@@ -4,15 +4,16 @@ const fs = require("fs");
 const moment = require('moment')
 moment.locale('id')
 const XlsxPopulate = require('xlsx-populate');
-const file_path = __dirname + "/Daily Log(20210223_0849).xls";
+const file_path = __dirname + "/Daily Log(20210324_1013).xls";
 const shift_ppnpn = require('./config/env.config').shift_ppnpn
 
 const data = xlsx.parse(file_path);
 
 let groups = {}
 
+let month = 1 //feb
 let current_day = moment();
-let targetDay = moment().month(0);
+let targetDay = moment().month(month);
 const today_id = moment().format('YYYY_MM_DD')
 const yest_id = moment().subtract(1, 'day').format('YYYY_MM_DD')
 const formatTanggalWithHour = 'HH:mm:ss M/D/YYYY'
@@ -158,7 +159,7 @@ data[0].data.forEach((row, i, arr) => {
 })
 
 //lintas bulan
-// current_day = targetDay
+current_day = targetDay
 
 
 XlsxPopulate.fromFileAsync(__dirname + "/rekap_ppnpns.xlsx")
