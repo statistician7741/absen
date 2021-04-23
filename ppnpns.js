@@ -11,8 +11,9 @@ const data = xlsx.parse(file_path);
 
 let groups = {}
 
+let month = 1 //feb
 let current_day = moment();
-let targetDay = moment().month(3);
+let targetDay = moment().month(month);
 const today_id = moment().format('YYYY_MM_DD')
 const yest_id = moment().subtract(1, 'day').format('YYYY_MM_DD')
 const formatTanggalWithHour = 'HH:mm:ss M/D/YYYY'
@@ -203,7 +204,7 @@ XlsxPopulate.fromFileAsync(__dirname + "/rekap_ppnpns.xlsx")
                                 p_kurang ? (p_kurang > 60 && p_kurang < 91 ? 1 : '-') : '-',
                                 p_kurang ? (p_kurang > 90 || !p_pukul ? ( d_pukul || p_pukul ? 1 : '-' ) : '-') : '-',
                                 !d_pukul && !p_pukul ? 1 : '-',
-                                m_pukul ? '-' : (moment(current_day).date(i).isAfter(moment(current_day).date(10).endOf('day'))?1:'-'),
+                                m_pukul ? '-' : 1,//(moment(current_day).date(i).isAfter(moment(current_day).date(10).endOf('day'))?1:'-'),
                             ]
                         } else {
                             arr = [
@@ -220,6 +221,7 @@ XlsxPopulate.fromFileAsync(__dirname + "/rekap_ppnpns.xlsx")
                                 '-',
                                 '-',
 
+                                '-',
                                 '-',
                                 '-',
                                 '-',
