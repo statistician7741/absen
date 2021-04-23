@@ -4,7 +4,7 @@ const fs = require("fs");
 const moment = require('moment')
 moment.locale('id')
 const XlsxPopulate = require('xlsx-populate');
-const file_path = __dirname + "/Daily Log(20210201_2145).xls";
+const file_path = __dirname + "/Daily Log(20210423_0849).xls";
 const shift_ppnpn = require('./config/env.config').shift_ppnpn
 
 const data = xlsx.parse(file_path);
@@ -12,7 +12,7 @@ const data = xlsx.parse(file_path);
 let groups = {}
 
 let current_day = moment();
-let targetDay = moment().month(0);
+let targetDay = moment().month(3);
 const today_id = moment().format('YYYY_MM_DD')
 const yest_id = moment().subtract(1, 'day').format('YYYY_MM_DD')
 const formatTanggalWithHour = 'HH:mm:ss M/D/YYYY'
@@ -53,7 +53,7 @@ data[0].data.forEach((row, i, arr) => {
         yesterday = moment(row[4], formatTglRawData).subtract(1, 'day');
         besok = moment(row[4], formatTglRawData).add(1, 'day');
         const all_absen_yest = ppnpns[row[2]]['absen'][yesterday.format(formatTglRawData)] ? ppnpns[row[2]]['absen'][yesterday.format(formatTglRawData)].all_absen : []
-        for (let index = 5; index <= 8; index++) {
+        for (let index = 5; index <= 15; index++) {
             if (row[index]) {
                 const absen_time = moment(`${row[index]} ${row[4]}`, formatTanggalWithHour)
                 active_absen_today.all_absen.push(absen_time)
