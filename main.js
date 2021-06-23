@@ -83,7 +83,7 @@ data[0].data.forEach((row, i, arr) => {
     }
 })
 
-XlsxPopulate.fromFileAsync(__dirname + "/rekap.xlsx")
+XlsxPopulate.fromFileAsync(__dirname + "/template/rekap.xlsx")
     .then(workbook => {
         let index = 0;
         for (let nama in groups) {

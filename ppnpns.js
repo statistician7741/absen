@@ -4,21 +4,23 @@ const fs = require("fs");
 const moment = require('moment')
 moment.locale('id')
 const XlsxPopulate = require('xlsx-populate');
-const file_path = __dirname + "/Daily Log(20210423_0849).xls";
+const file_path = __dirname + "/xls/Daily Log(20210623_0944).xls";
 const shift_ppnpn = require('./config/env.config').shift_ppnpn
 
 const data = xlsx.parse(file_path);
 
 let groups = {}
 
-let month = 1 //feb
+let month = 5 //feb
 let current_day = moment();
 let targetDay = moment().month(month);
 const today_id = moment().format('YYYY_MM_DD')
 const yest_id = moment().subtract(1, 'day').format('YYYY_MM_DD')
-const formatTanggalWithHour = 'HH:mm:ss M/D/YYYY'
+const formatTanggalWithHourA = 'HH:mm:ss M/D/YYYY'
+const formatTanggalWithHourB = 'HH:mm:ss DD/MM/YYYY'
 const formatHour = 'HH:mm:ss'
-const formatTglRawData = 'M/D/YYYY';
+const formatTglRawDataA = 'M/D/YYYY';
+const formatTglRawDataB = 'DD/MM/YYYY';
 
 const terlambat_menitF = (absen_time, jam_batas) => (absen_time.diff(jam_batas, 'minutes') > 0 ? absen_time.diff(jam_batas, 'minutes') : '-');
 const psw_menitF = (absen_time, jam_batas) => (jam_batas.diff(absen_time, 'minutes') > 0 ? jam_batas.diff(absen_time, 'minutes') : '-');
@@ -49,14 +51,14 @@ data[0].data.forEach((row, i, arr) => {
         if (!ppnpns[row[2]]['absen'][row[4]].all_absen) ppnpns[row[2]]['absen'][row[4]].all_absen = []
         const active_ppnpns_absen = ppnpns[row[2]]['absen']
         const active_absen_today = ppnpns[row[2]]['absen'][row[4]]
-        current_day = moment(row[4], formatTglRawData);
-        if (i === 1) targetDay = moment(row[4], formatTglRawData);
-        yesterday = moment(row[4], formatTglRawData).subtract(1, 'day');
-        besok = moment(row[4], formatTglRawData).add(1, 'day');
-        const all_absen_yest = ppnpns[row[2]]['absen'][yesterday.format(formatTglRawData)] ? ppnpns[row[2]]['absen'][yesterday.format(formatTglRawData)].all_absen : []
+        current_day = moment(row[4], formatTglRawDataB);
+        if (i === 1) targetDay = moment(row[4], formatTglRawDataB);
+        yesterday = moment(row[4], formatTglRawDataB).subtract(1, 'day');
+        besok = moment(row[4], formatTglRawDataB).add(1, 'day');
+        const all_absen_yest = ppnpns[row[2]]['absen'][yesterday.format(formatTglRawDataB)] ? ppnpns[row[2]]['absen'][yesterday.format(formatTglRawDataB)].all_absen : []
         for (let index = 5; index <= 15; index++) {
             if (row[index]) {
-                const absen_time = moment(`${row[index]} ${row[4]}`, formatTanggalWithHour)
+                const absen_time = moment(`${row[index]} ${row[4]}`, formatTanggalWithHourB)
                 active_absen_today.all_absen.push(absen_time)
                 const pukul0000 = moment(current_day).hour(0).minute(0).second(0)
                 const pukul0130 = moment(current_day).hour(1).minute(29).second(59)
@@ -88,7 +90,7 @@ data[0].data.forEach((row, i, arr) => {
                         }
                     }
                 }
-                const tgl_kemarin = yesterday.format(formatTglRawData)
+                const tgl_kemarin = yesterday.format(formatTglRawDataB)
                 if (shift_ppnpn[row[2]][yesterday.day()][1]) { //KEMARIN SHIFT MALAM
                     if (!active_ppnpns_absen[tgl_kemarin]) active_ppnpns_absen[tgl_kemarin] = {} //tanggal
                     if (!active_ppnpns_absen[tgl_kemarin].datang) active_ppnpns_absen[tgl_kemarin].datang = {
@@ -162,7 +164,7 @@ data[0].data.forEach((row, i, arr) => {
 current_day = targetDay
 
 
-XlsxPopulate.fromFileAsync(__dirname + "/rekap_ppnpns.xlsx")
+XlsxPopulate.fromFileAsync(__dirname + "/template/rekap_ppnpns.xlsx")
     .then(workbook => {
         let index = 0;
         for (let nama in ppnpns) {
@@ -181,7 +183,7 @@ XlsxPopulate.fromFileAsync(__dirname + "/rekap_ppnpns.xlsx")
                                 rgb: "8c8c8c"
                             }
                         })
-                        let data = ppnpns[nama].absen[moment(current_day).date(i).format(formatTglRawData)];
+                        let data = ppnpns[nama].absen[moment(current_day).date(i).format(formatTglRawDataB)];
                         let arr;
                         if (data) {
                             let { datang: { pukul: d_pukul, telat: d_telat }, mid: { pukul: m_pukul }, pulang: { pukul: p_pukul, kurang: p_kurang } } = data
@@ -238,11 +240,12 @@ XlsxPopulate.fromFileAsync(__dirname + "/rekap_ppnpns.xlsx")
                 index++;
             }
         }
-
-        if (fs.existsSync(__dirname + `/rekap_ok_PPNPNS.xlsx`)) {
-            fs.unlinkSync(__dirname + `/rekap_ok_PPNPNS.xlsx`);
+        
+        let name = `/outputs/rekap_ok_PPNPNS_${moment().month(month).format('MMMM YYYY')}.xlsx`
+        if (fs.existsSync(__dirname + name)) {
+            fs.unlinkSync(__dirname + name);
         }
-        workbook.toFileAsync(__dirname + `/rekap_ok_PPNPNS.xlsx`);
+        workbook.toFileAsync(__dirname + name);
     }).then(dataa => {
         console.log('Finished');
     })
